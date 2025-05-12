@@ -1,5 +1,15 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { getModels, getCompletion, streamCompletion } from '../utils/llm_gateway_client';
+import { 
+    Router, 
+    Request, 
+    Response, 
+    NextFunction 
+} from 'express';
+import { 
+    getModels, 
+    getCompletion, 
+    streamCompletion,
+    generateImage 
+} from '../utils/llm_gateway_client';
 
 const router = Router();
 
@@ -52,6 +62,26 @@ router.post(
       next(err);
     }
   }
+);
+
+router.post(
+    '/images/generations',
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const baseUrl = req.header('x-llm-base-url')!;
+            const apiKey = req.header('x-llm-api-key')!;
+            if (!baseUrl || !apiKey) {
+              res.status(400).json({
+                error: 'x-llm-base-url and x-llm-api-key headers are required'
+              });
+            }
+            const request = req.body;
+            const response = await generateImage(baseUrl, apiKey, request);
+            res.json(response);
+        } catch (err) {
+            next(err);
+        }
+    }
 );
 
 export default router;

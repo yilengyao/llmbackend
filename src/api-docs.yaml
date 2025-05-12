@@ -15,6 +15,7 @@ paths:
             text/plain:
               schema:
                 type: string
+
   /v1/models:
     get:
       summary: Fetch available models
@@ -92,6 +93,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /v1/images/generations:
+    post:
+      summary: Generate images
+      description: Proxy to upstream LLM for image generation.
+      parameters:
+        - in: header
+          name: x-llm-base-url
+          required: true
+          schema:
+            type: string
+          description: Base URL of the LLM service
+        - in: header
+          name: x-llm-api-key
+          required: true
+          schema:
+            type: string
+          description: Your LLM API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateImageRequest'
+      responses:
+        '200':
+          description: The image generation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+        '400':
+          description: Missing headers or bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
 components:
   schemas:
     Message:
@@ -151,3 +190,35 @@ components:
       properties:
         error:
           type: string
+
+    GenerateImageRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: Text prompt to generate the image
+        model:
+          type: string
+          description: Model to use for image generation
+        n:
+          type: integer
+          description: Number of images to generate
+        size:
+          type: string
+          description: Dimensions of the generated image (e.g. "1024x1024")
+    ImageResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+          description: Timestamp of image creation
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                description: URL of the generated image

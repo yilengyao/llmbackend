@@ -4,12 +4,7 @@ import {
     Response, 
     NextFunction 
 } from 'express';
-import { 
-    getModels, 
-    getCompletion, 
-    streamCompletion,
-    generateImage 
-} from '../utils/llm_gateway_client';
+import { api } from '@innobridge/llmbackendsdk';
 
 const router = Router();
 
@@ -24,7 +19,7 @@ router.get(
           error: 'x-llm-base-url and x-llm-api-key headers are required'
         });
       }
-      const models = await getModels(baseUrl, apiKey);
+      const models = await api.getModels(baseUrl, apiKey);
       res.json(models);
     } catch (err) {
       next(err);
@@ -50,12 +45,12 @@ router.post(
         res.setHeader("Cache-Control", "no-cache");
         res.flushHeaders();
   
-        for await (const chunk of streamCompletion(baseUrl, apiKey, request)) {
+        for await (const chunk of api.streamCompletion(baseUrl, apiKey, request)) {
           res.write(chunk);
         }
         res.end();
       } else {
-        const completion = await getCompletion(baseUrl, apiKey, request);
+        const completion = await api.getCompletion(baseUrl, apiKey, request);
         res.json(completion);
       }
     } catch (err) {
@@ -76,7 +71,7 @@ router.post(
               });
             }
             const request = req.body;
-            const response = await generateImage(baseUrl, apiKey, request);
+            const response = await api.generateImage(baseUrl, apiKey, request);
             res.json(response);
         } catch (err) {
             next(err);
